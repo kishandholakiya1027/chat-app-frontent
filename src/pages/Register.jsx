@@ -2,15 +2,16 @@ import axios from 'axios';
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
-const initialData = {
-  username: "",
-  email: "",
-  password: "",
-  cpassword: ""
-}
-
 const Register = () => {
   const navigate = useNavigate();
+
+  const initialData = {
+    username: "",
+    email: "",
+    password: "",
+    cpassword: ""
+  }
+
   const [data, setData] = useState(initialData);
   const [dataError, setDataError] = useState(initialData);
 

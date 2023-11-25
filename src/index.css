@@ -111,6 +111,10 @@ form input {
   margin-bottom: 10px;
 }
 
+.form button {
+  cursor: pointer;
+}
+
 .form .submitbtn button {
   padding: 10px 20px;
   background-color: #000;

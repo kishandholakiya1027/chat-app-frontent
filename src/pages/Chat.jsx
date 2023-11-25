@@ -2,6 +2,7 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import io from 'socket.io-client';
+var socket;
 
 const BACKEND_URL = 'http://localhost:8085/';
 
@@ -13,7 +14,6 @@ const Chat = () => {
   const [msg, setMsg] = useState('');
   const [data, setData] = useState('');
   const [chat, setChat] = useState([]);
-  let socket;
 
   useEffect(() => {
     socket = io.connect(BACKEND_URL);
