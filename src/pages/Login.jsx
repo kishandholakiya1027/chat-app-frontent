@@ -1,60 +1,61 @@
 import axios from 'axios';
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-
-const initialData = {
-  email: "",
-  password: "",
-}
+import { Link } from 'react-router-dom';
 
 const Login = () => {
-
   const navigate = useNavigate();
+
+  const API_URL = 'http://localhost:8085/auth/login';
+  const initialData = {
+    email: "",
+    password: "",
+  };
+
   const [data, setData] = useState(initialData);
   const [dataError, setDataError] = useState(initialData);
   const auth = localStorage.getItem('token');
 
-  const formEvent = (e) => {
-    const { name, value } = e.target
-    setData(prev => ({ ...prev, [name]: value }))
+  const validateField = (name, value, setDataError) => {
+    if (value === "") {
+      setDataError(prev => ({ ...prev, [name]: "This Field is Required!" }));
+    } else {
+      if (name === 'email' && !value.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/)) {
+        setDataError(prev => ({ ...prev, [name]: "Please Enter a Valid Email" }));
+      } else {
+        setDataError(prev => ({ ...prev, [name]: "" }));
+      }
+    }
+  };
 
-    if (name === 'email') {
-      if (value === "") {
-        setDataError(prev => ({ ...prev, [name]: "This Field are Require!" }))
-      } else if (!value.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/)) {
-        setDataError(prev => ({ ...prev, [name]: "Please Enter Valid Email" }))
-      } else {
-        setDataError(prev => ({ ...prev, [name]: "" }))
-      }
-    }
-    if (name === 'password') {
-      if (value === "") {
-        setDataError(prev => ({ ...prev, [name]: "This Field are Require!" }))
-      } else {
-        setDataError(prev => ({ ...prev, [name]: "" }))
-      }
-    }
-  }
+  const formEvent = ({ target: { name, value } }) => {
+    setData(prev => ({ ...prev, [name]: value }));
+    validateField(name, value, setDataError);
+  };
 
   const formSubmit = async () => {
     if (dataError.email === "" && dataError.password === "" && data.email !== "" && data.password !== "") {
-      const res = await axios.post('http://localhost:8085/auth/login', data);
-      if (res.data.status === 200) {
-        localStorage.setItem('token', res.data.data.access_token);
-        navigate('/');
-      }
-      else {
-        alert(res.data.message);
+      try {
+        const res = await axios.post(API_URL, data);
+        if (res.data.status === 200) {
+          localStorage.setItem('token', res.data.data.access_token);
+          localStorage.setItem('userId', res.data.data.id);
+          navigate('/');
+        } else {
+          alert(res.data.message);
+        }
+      } catch (error) {
+        console.error("Error during login:", error);
       }
     } else {
       if (data.email === "") {
-        setDataError(prev => ({ ...prev, email: "This Field are Require!" }))
+        setDataError(prev => ({ ...prev, email: "This Field is Required!" }));
       }
       if (data.password === "") {
-        setDataError(prev => ({ ...prev, password: "This Field are Require!" }))
+        setDataError(prev => ({ ...prev, password: "This Field is Required!" }));
       }
     }
-  }
+  };
 
   useEffect(() => {
     if (auth) {
@@ -64,42 +65,25 @@ const Login = () => {
 
   return (
     <div>
-      <h2>Login Form</h2>
-      <form method='post'>
-        {/* <div>
-          <label htmlFor="username">Username</label>
-          <input type="text" name='username' id='username' value={data.username} onChange={formEvent} placeholder='Username' />
-          {
-            dataError.username !== "" && <p style={{ color: "#ff0000", fontSize: "12px" }}>{dataError.username}</p>
-          }
-        </div> */}
-        <div>
+      <form method='post' className='form'>
+        <h2>Login Form</h2>
+        <div className='input-box'>
           <label htmlFor="email">Email</label>
           <input type="text" name='email' id='email' value={data.email} onChange={formEvent} placeholder='Email' />
-          {
-            dataError.email !== "" && <p style={{ color: "#ff0000", fontSize: "12px" }}>{dataError.email}</p>
-          }
+          {dataError.email && <p style={{ color: "#ff0000", fontSize: "12px" }}>{dataError.email}</p>}
         </div>
-        <div>
+        <div className='input-box'>
           <label htmlFor="password">Password</label>
-          <input type="text" name='password' id='password' value={data.password} onChange={formEvent} placeholder='Password' />
-          {
-            dataError.password !== "" && <p style={{ color: "#ff0000", fontSize: "12px" }}>{dataError.password}</p>
-          }
+          <input type="password" name='password' id='password' value={data.password} onChange={formEvent} placeholder='Password' />
+          {dataError.password && <p style={{ color: "#ff0000", fontSize: "12px" }}>{dataError.password}</p>}
         </div>
-        {/* <div>
-          <label htmlFor="cpassword">Confirm Password</label>
-          <input type="text" name='cpassword' id='cpassword' value={data.cpassword} onChange={formEvent} placeholder='Confirm Password' />
-          {
-            dataError.cpassword !== "" && <p style={{ color: "#ff0000", fontSize: "12px" }}>{dataError.cpassword}</p>
-          }
-        </div> */}
+        <div className='submitbtn'>
+          <button type='button' onClick={formSubmit} >Login</button>
+        </div>
+        {auth ? null : <Link to="/register">Register</Link>}
       </form>
-      <div>
-        <button type='button' onClick={formSubmit} >Login</button>
-      </div>
     </div>
-  )
-}
+  );
+};
 
 export default Login;
