@@ -1,7 +1,6 @@
 import axios from 'axios';
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 
 const initialData = {
   username: "",
@@ -11,111 +10,90 @@ const initialData = {
 }
 
 const Register = () => {
-
   const navigate = useNavigate();
   const [data, setData] = useState(initialData);
   const [dataError, setDataError] = useState(initialData);
 
   const formEvent = (e) => {
-    const { name, value } = e.target
-    setData(prev => ({ ...prev, [name]: value }))
+    const { name, value } = e.target;
+    setData((prev) => ({ ...prev, [name]: value }));
 
     if (name === 'username') {
-      if (value === "") {
-        setDataError(prev => ({ ...prev, [name]: "This Field are Require!" }))
-      } else {
-        setDataError(prev => ({ ...prev, [name]: "" }))
-      }
-    }
-    if (name === 'email') {
-      if (value === "") {
-        setDataError(prev => ({ ...prev, [name]: "This Field are Require!" }))
-      } else if (!value.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/)) {
-        setDataError(prev => ({ ...prev, [name]: "Please Enter Valid Email" }))
-      } else {
-        setDataError(prev => ({ ...prev, [name]: "" }))
-      }
-    }
-    if (name === 'password') {
-      if (value === "") {
-        setDataError(prev => ({ ...prev, [name]: "This Field are Require!" }))
-      } else {
-        setDataError(prev => ({ ...prev, [name]: "" }))
-      }
-    }
-    if (name === 'cpassword') {
-      if (value === "") {
-        setDataError(prev => ({ ...prev, [name]: "This Field are Require!" }))
-      } else {
-        if (data.password === value) {
-          setDataError(prev => ({ ...prev, [name]: "" }))
-        } else {
-          setDataError(prev => ({ ...prev, [name]: "Password and Confirm Password Not Match!" }))
-        }
-      }
+      setDataError((prev) => ({ ...prev, [name]: value === "" ? "This Field is Required!" : "" }));
+    } else if (name === 'email') {
+      setDataError((prev) => ({
+        ...prev,
+        [name]: value === "" ? "This Field is Required!" : !value.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/) ? "Please Enter a Valid Email" : ""
+      }));
+    } else if (name === 'password') {
+      setDataError((prev) => ({ ...prev, [name]: value === "" ? "This Field is Required!" : "" }));
+    } else if (name === 'cpassword') {
+      setDataError((prev) => ({
+        ...prev,
+        [name]: value === "" ? "This Field is Required!" : data.password !== value ? "Password and Confirm Password Do Not Match!" : ""
+      }));
     }
   }
 
-  const formSubmit = async () => {
+  const formSubmit = async (e) => {
+    e.preventDefault();
+
     if (dataError.username === "" && dataError.email === "" && dataError.password === "" && dataError.cpassword === "" && data.username !== "" && data.email !== "" && data.password !== "" && data.cpassword !== "") {
-      const res = await axios.post('http://localhost:8085/auth/register', data);
-      if (res.data.status === 200) {
-        navigate('/login');
-      }
-      else {
-        alert(res.data.message);
+      try {
+        const res = await axios.post('http://localhost:8085/auth/register', data);
+        if (res.data.status === 200) {
+          navigate('/login');
+        } else {
+          alert(res.data.message);
+        }
+      } catch (error) {
+        console.error(error);
       }
     } else {
       if (data.username === "") {
-        setDataError(prev => ({ ...prev, username: "This Field are Require!" }))
+        setDataError((prev) => ({ ...prev, username: "This Field is Required!" }));
       }
       if (data.email === "") {
-        setDataError(prev => ({ ...prev, email: "This Field are Require!" }))
+        setDataError((prev) => ({ ...prev, email: "This Field is Required!" }));
       }
       if (data.password === "") {
-        setDataError(prev => ({ ...prev, password: "This Field are Require!" }))
+        setDataError((prev) => ({ ...prev, password: "This Field is Required!" }));
       }
     }
   }
+
   return (
     <div>
-      <form method='post' className='form'>
+      <form method='post' className='form' onSubmit={formSubmit}>
         <h2>Register Form</h2>
-        <div className='input-box'>
-          <label htmlFor="username">Username</label>
-          <input type="text" name='username' id='username' value={data.username} onChange={formEvent} placeholder='Username' />
-          {
-            dataError.username !== "" && <p style={{ color: "#ff0000", fontSize: "12px" }}>{dataError.username}</p>
-          }
-        </div>
-        <div className='input-box'>
-          <label htmlFor="email">Email</label>
-          <input type="text" name='email' id='email' value={data.email} onChange={formEvent} placeholder='Email' />
-          {
-            dataError.email !== "" && <p style={{ color: "#ff0000", fontSize: "12px" }}>{dataError.email}</p>
-          }
-        </div>
-        <div className='input-box'>
-          <label htmlFor="password">Password</label>
-          <input type="text" name='password' id='password' value={data.password} onChange={formEvent} placeholder='Password' />
-          {
-            dataError.password !== "" && <p style={{ color: "#ff0000", fontSize: "12px" }}>{dataError.password}</p>
-          }
-        </div>
-        <div className='input-box'>
-          <label htmlFor="cpassword">Confirm Password</label>
-          <input type="text" name='cpassword' id='cpassword' value={data.cpassword} onChange={formEvent} placeholder='Confirm Password' />
-          {
-            dataError.cpassword !== "" && <p style={{ color: "#ff0000", fontSize: "12px" }}>{dataError.cpassword}</p>
-          }
-        </div>
+        {renderInput('username', 'Username')}
+        {renderInput('email', 'Email')}
+        {renderInput('password', 'Password', 'password')}
+        {renderInput('cpassword', 'Confirm Password', 'password')}
         <div className='submitbtn'>
-          <button type='button' onClick={formSubmit} >Register</button>
+          <button type='submit'>Register</button>
         </div>
         <Link to="/login">Login</Link>
       </form>
     </div>
-  )
+  );
+
+  function renderInput(name, label, type = 'text') {
+    return (
+      <div className='input-box' key={name}>
+        <label htmlFor={name}>{label}</label>
+        <input
+          type={type}
+          name={name}
+          id={name}
+          value={data[name]}
+          onChange={formEvent}
+          placeholder={label}
+        />
+        {dataError[name] !== "" && <p style={{ color: "#ff0000", fontSize: "12px" }}>{dataError[name]}</p>}
+      </div>
+    );
+  }
 }
 
 export default Register;
